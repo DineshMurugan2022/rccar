@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
@@ -44,10 +45,10 @@ export async function POST(request: Request) {
           
           <div style="background-color: #0f172a; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #1e293b;">
             <h2 style="color: #e2e8f0; font-size: 16px; text-transform: uppercase; margin-top: 0;">Order Summary</h2>
-            <p style="font-size: 18px; color: #f97316; margin-bottom: 5px;"><strong>Total Amount:</strong> ₹${totalAmount.toLocaleString('en-IN')}</p>
+            <p style="font-size: 18px; color: #f97316; margin-bottom: 5px;"><strong>Total Amount:</strong> â‚¹${totalAmount.toLocaleString('en-IN')}</p>
             ${paymentMethod === 'COD' && advancePaidAmount !== undefined ? `
-              <p style="font-size: 14px; color: #4ade80; margin: 5px 0;"><strong>Advance Paid:</strong> ₹${advancePaidAmount.toLocaleString('en-IN')}</p>
-              <p style="font-size: 16px; color: #fbbf24; margin-top: 5px; margin-bottom: 20px;"><strong>Balance Due on Delivery:</strong> ₹${(totalAmount - advancePaidAmount).toLocaleString('en-IN')}</p>
+              <p style="font-size: 14px; color: #4ade80; margin: 5px 0;"><strong>Advance Paid:</strong> â‚¹${advancePaidAmount.toLocaleString('en-IN')}</p>
+              <p style="font-size: 16px; color: #fbbf24; margin-top: 5px; margin-bottom: 20px;"><strong>Balance Due on Delivery:</strong> â‚¹${(totalAmount - advancePaidAmount).toLocaleString('en-IN')}</p>
             ` : '<div style="margin-bottom: 20px;"></div>'}
             
             <h3 style="color: #cbd5e1; font-size: 14px; margin-bottom: 10px;">Items Ordered:</h3>
@@ -73,3 +74,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+

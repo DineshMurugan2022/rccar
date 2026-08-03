@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 
@@ -33,3 +34,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

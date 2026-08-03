@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { supabase } from '../../../../utils/supabase';
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // Signature verified — parse the payload
+    // Signature verified â€” parse the payload
     const event = JSON.parse(body);
     const eventType = event.event;
 
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
         if (dbError) {
           console.error('Failed to update order in Supabase:', dbError.message);
         } else {
-          console.log(`✅ Order ${orderId} verified and marked as paid via webhook`);
+          console.log(`âœ… Order ${orderId} verified and marked as paid via webhook`);
         }
       }
     }
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
           })
           .eq('id', orderId);
 
-        console.log(`❌ Order ${orderId} marked as failed via webhook`);
+        console.log(`âŒ Order ${orderId} marked as failed via webhook`);
       }
     }
 
@@ -91,3 +92,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }
+

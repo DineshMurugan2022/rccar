@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { StandardCheckoutClient, Env } from '@phonepe-pg/pg-sdk-node';
 
@@ -85,7 +86,7 @@ async function handlePhonePeCallback(request: Request) {
       }
       // If PENDING or CREATED, keep status as PAYMENT_PENDING (still treated as success by frontend)
     } else {
-      // No credentials configured — treat redirect from PhonePe as success (they only redirect on success/cancel)
+      // No credentials configured â€” treat redirect from PhonePe as success (they only redirect on success/cancel)
       console.warn('PhonePe credentials not configured. Defaulting status to PAYMENT_PENDING.');
       status = 'PAYMENT_PENDING';
     }
@@ -95,7 +96,7 @@ async function handlePhonePeCallback(request: Request) {
     // here means they completed the UPI flow. Default to PAYMENT_PENDING so the 
     // order gets created and we avoid a false "Payment Failed" screen.
     console.error('Error verifying order status with PhonePe SDK:', statusError?.message || statusError);
-    console.log('SDK verification failed — defaulting to PAYMENT_PENDING to avoid false failure.');
+    console.log('SDK verification failed â€” defaulting to PAYMENT_PENDING to avoid false failure.');
     status = 'PAYMENT_PENDING';
   }
 
@@ -112,3 +113,4 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   return handlePhonePeCallback(request);
 }
+

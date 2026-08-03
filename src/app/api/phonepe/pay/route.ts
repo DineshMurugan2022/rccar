@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { StandardCheckoutClient, Env, StandardCheckoutPayRequest } from '@phonepe-pg/pg-sdk-node';
 import { v4 as uuidv4 } from 'uuid';
@@ -57,3 +58,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

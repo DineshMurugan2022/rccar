@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { supabase } from '../../../../utils/supabase';
@@ -59,3 +60,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
   }
 }
+
