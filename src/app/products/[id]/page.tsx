@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { PRODUCTS } from "../../../data/mockData";

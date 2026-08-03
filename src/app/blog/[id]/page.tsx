@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { Metadata } from 'next';
 import { RC_GUIDES } from '../../../data/mockData';
 import BlogArticleView from "../../../components/BlogArticleView";
