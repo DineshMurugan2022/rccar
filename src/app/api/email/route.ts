@@ -71,4 +71,5 @@ export async function POST(request: Request) {
     console.error("Email Sending Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+}
 
