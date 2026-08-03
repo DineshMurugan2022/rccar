@@ -1,7 +1,13 @@
-﻿export const runtime = 'edge';
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { supabase } from '../../../../utils/supabase';
+
+async function sha256(message: string) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 export async function POST(request: Request) {
   try {
@@ -24,7 +30,7 @@ export async function POST(request: Request) {
     const base64Body = data.response;
     
     // Checksum = sha256(base64Body + saltKey) + ### + saltIndex
-    const expectedHash = crypto.createHash('sha256').update(base64Body + saltKey).digest('hex');
+    const expectedHash = await sha256(base64Body + saltKey);
     const receivedHash = xVerify.split('###')[0];
     
     if (expectedHash !== receivedHash) {

@@ -1,6 +1,12 @@
-﻿export const runtime = 'edge';
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import { StandardCheckoutClient, Env } from '@phonepe-pg/pg-sdk-node';
+
+async function sha256(message: string) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 async function handlePhonePeCallback(request: Request) {
   const url = new URL(request.url);
@@ -58,35 +64,47 @@ async function handlePhonePeCallback(request: Request) {
   let status = 'PAYMENT_PENDING'; // Default to pending (user did pay, we just can't confirm yet)
 
   try {
-    const clientId = process.env.PHONEPE_CLIENT_ID || '';
-    const clientSecret = process.env.PHONEPE_CLIENT_SECRET || '';
-    const env = process.env.PHONEPE_ENV === 'PRODUCTION' ? Env.PRODUCTION : Env.SANDBOX;
+    const merchantId = process.env.PHONEPE_CLIENT_ID || '';
+    const saltKey = process.env.PHONEPE_CLIENT_SECRET || '';
+    const saltIndex = 1;
+    const isProduction = process.env.PHONEPE_ENV === 'PRODUCTION';
+    const phonepeHost = isProduction ? 'https://api.phonepe.com/apis/hermes' : 'https://api-preprod.phonepe.com/apis/pg-sandbox';
 
-    if (clientId && clientSecret) {
-      const client = StandardCheckoutClient.getInstance(clientId, clientSecret, 1, env);
-      const statusResponse = await client.getOrderStatus(merchantOrderId);
+    if (merchantId && saltKey) {
+      const endpoint = `/pg/v3/transaction/${merchantId}/${merchantOrderId}/status`;
+      const dataToHash = endpoint + saltKey;
+      const hash = await sha256(dataToHash);
+      const checksum = `${hash}###${saltIndex}`;
 
+      const response = await fetch(`${phonepeHost}${endpoint}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-VERIFY': checksum,
+          'X-MERCHANT-ID': merchantId
+        }
+      });
+
+      const statusResponse = await response.json();
       console.log('PhonePe getOrderStatus response:', JSON.stringify(statusResponse));
 
       // PhonePe returns state as 'COMPLETED', 'FAILED', 'PENDING', 'CREATED'
       // Payment amounts are also returned - check all possible success fields
-      const state = statusResponse?.state || '';
-      const paymentDetails = (statusResponse as any)?.paymentDetails?.[0];
-      const paymentState = paymentDetails?.state || '';
+      const state = statusResponse?.code || '';
+      const paymentState = statusResponse?.data?.state || '';
 
       if (
-        state === 'COMPLETED' ||
-        state === 'SUCCESS' ||
+        state === 'PAYMENT_SUCCESS' ||
         paymentState === 'COMPLETED' ||
         paymentState === 'SUCCESS'
       ) {
         status = 'PAYMENT_SUCCESS';
-      } else if (state === 'FAILED' || paymentState === 'FAILED') {
+      } else if (state === 'PAYMENT_ERROR' || paymentState === 'FAILED') {
         status = 'PAYMENT_ERROR';
       }
       // If PENDING or CREATED, keep status as PAYMENT_PENDING (still treated as success by frontend)
     } else {
-      // No credentials configured â€” treat redirect from PhonePe as success (they only redirect on success/cancel)
+      // No credentials configured — treat redirect from PhonePe as success (they only redirect on success/cancel)
       console.warn('PhonePe credentials not configured. Defaulting status to PAYMENT_PENDING.');
       status = 'PAYMENT_PENDING';
     }
@@ -95,8 +113,8 @@ async function handlePhonePeCallback(request: Request) {
     // PhonePe UPI redirects the user back AFTER payment succeeds. The user arriving 
     // here means they completed the UPI flow. Default to PAYMENT_PENDING so the 
     // order gets created and we avoid a false "Payment Failed" screen.
-    console.error('Error verifying order status with PhonePe SDK:', statusError?.message || statusError);
-    console.log('SDK verification failed â€” defaulting to PAYMENT_PENDING to avoid false failure.');
+    console.error('Error verifying order status with PhonePe API:', statusError?.message || statusError);
+    console.log('API verification failed — defaulting to PAYMENT_PENDING to avoid false failure.');
     status = 'PAYMENT_PENDING';
   }
 

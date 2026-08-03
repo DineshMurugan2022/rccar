@@ -1,6 +1,5 @@
-﻿export const runtime = 'edge';
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { supabase } from '../../../../utils/supabase';
 
 /**
@@ -32,11 +31,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
     }
 
-    // Cryptographically verify the webhook signature
-    const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(body)
-      .digest('hex');
+    // Cryptographically verify the webhook signature using Web Crypto API
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(webhookSecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signatureBuffer = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(body)
+    );
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
 
     if (expectedSignature !== signature) {
       console.error('Razorpay webhook signature mismatch');

@@ -1,14 +1,15 @@
-﻿export const runtime = 'edge';
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import Razorpay from 'razorpay';
 
 export async function POST(request: Request) {
   try {
-    const razorpay = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
-      key_secret: process.env.RAZORPAY_KEY_SECRET as string,
-    });
-    
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+      return NextResponse.json({ error: 'Razorpay keys not configured' }, { status: 500 });
+    }
+
     const body = await request.json();
     const { amount } = body; // Amount should be in INR rupees
 
@@ -23,7 +24,23 @@ export async function POST(request: Request) {
       receipt: `receipt_order_${Date.now()}`,
     };
 
-    const order = await razorpay.orders.create(options);
+    const basicAuth = btoa(`${keyId}:${keySecret}`);
+
+    const response = await fetch('https://api.razorpay.com/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${basicAuth}`
+      },
+      body: JSON.stringify(options)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.description || 'Failed to create Razorpay order');
+    }
+
+    const order = await response.json();
     
     return NextResponse.json(order, { status: 200 });
   } catch (error: any) {
