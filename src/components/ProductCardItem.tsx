@@ -59,14 +59,15 @@ export function ProductCardItem({ p, wishlist, toggleWishlist, onProductClick }:
 
   const handleQuickAdd = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
-    addToCart(product, selectedVariant, 1);
+    const variant = selectedVariant || product.variants[0];
+    addToCart(product, variant, 1);
     
     // Track AddToCart event
     trackAddToCart(product.name, product.sku, product.price, 'INR');
 
     showDialog({
       title: 'Added to Cart',
-      message: `${product.name} (${selectedVariant.attributes.color || "Standard"}) has been added to your cart.`
+      message: `${product.name} (${variant?.attributes?.color || "Standard"}) has been added to your cart.`
     });
   };
 
@@ -100,9 +101,6 @@ export function ProductCardItem({ p, wishlist, toggleWishlist, onProductClick }:
         <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
           <span className="rounded bg-slate-950/80 px-2 py-0.5 text-[8px] font-normal text-brand-orange border border-brand-orange/30 uppercase tracking-wider">
             {p.scale} Scale
-          </span>
-          <span className="rounded bg-slate-950/80 px-2 py-0.5 text-[8px] font-normal text-brand-gold border border-brand-gold/30 uppercase tracking-wider">
-            {p.speedKmh}+ KM/H
           </span>
         </div>
 
@@ -154,7 +152,7 @@ export function ProductCardItem({ p, wishlist, toggleWishlist, onProductClick }:
         {uniqueColors.length > 0 && (
           <div className="flex items-center justify-center flex-wrap gap-2 pt-1 pb-1">
             {uniqueColors.map((color, idx) => {
-              const isSelected = selectedVariant.attributes.color === color;
+              const isSelected = selectedVariant?.attributes?.color === color;
               return (
                 <button
                   key={idx}
@@ -189,21 +187,22 @@ export function ProductCardItem({ p, wishlist, toggleWishlist, onProductClick }:
         <div className="border-t border-brand-border pt-3 w-full flex items-center gap-2">
           <button
             onClick={(e) => {
-              if (selectedVariant.stockQty > 0) {
+              const isAvailable = (selectedVariant?.stockQty ?? p.stockQty) > 0;
+              if (isAvailable) {
                 handleQuickAdd(e, p);
               } else {
                 e.stopPropagation();
               }
             }}
-            disabled={selectedVariant.stockQty <= 0}
+            disabled={(selectedVariant?.stockQty ?? p.stockQty) <= 0}
             className={`flex-1 rounded-lg font-normal uppercase px-3 py-2 text-[10px] sm:text-xs transition-colors flex items-center justify-center gap-1 ${
-              selectedVariant.stockQty > 0 
+              (selectedVariant?.stockQty ?? p.stockQty) > 0 
                 ? 'bg-brand-orange hover:bg-brand-gold text-white' 
                 : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
             }`}
           >
             <Car className="h-3.5 w-3.5" />
-            {selectedVariant.stockQty > 0 ? "Buy Rig" : "Sold Out"}
+            {(selectedVariant?.stockQty ?? p.stockQty) > 0 ? "Buy Rig" : "Sold Out"}
           </button>
           <button
             aria-label="Share Product"

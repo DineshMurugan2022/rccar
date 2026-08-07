@@ -51,7 +51,6 @@ describe('ProductCardItem', () => {
     expect(screen.getByText('Test RC Car')).toBeInTheDocument();
     expect(screen.getByText('₹5,000')).toBeInTheDocument();
     expect(screen.getByText('₹6,000')).toBeInTheDocument();
-    expect(screen.getByText('80+ KM/H')).toBeInTheDocument();
   });
 
   it('calls toggleWishlist when heart icon is clicked', () => {
